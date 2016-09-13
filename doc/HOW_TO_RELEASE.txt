@@ -1,0 +1,88 @@
+How To release a new version of TL4J (either read this or run howtorelease.sh for instructions)
+==========================================
+
+Before
+------
+
+Before you begin, you might want to make sure the dependencies (JUnit) are up-to-date. TODO: what's the best way to check this? You can see the version in the pom.xml's <dependencies> section. If you do change the version there, make sure to regen the Eclipse project with :mvn -DdownloadSources=true -DdownloadJavadocs=true eclipse:eclipse". TODO: that is currently issuing an error regarding the lack of a junit javadoc artifact.
+
+Then
+----
+ 
+0) Create a release SVN tag:
+
+$ svn cp trunk tags/release-x.y.z
+
+1) go to that directory:
+
+$ cd tags/release-x.y.z
+
+2) Edit this tag's pom.xml, changing the <version> element to:
+
+<version>x.y.z</version>
+
+3) Build a dist. There are 5 profiles
+
+$ mvn clean; for i in junit3 junit4 junit3-only junit4-only agnostic; do mvn -P ${i} install; done
+
+4) Create the sources, and rename the output file (TODO: fix this)
+
+$ mvn source:jar; mv target/test-libraries-for-java-x.y.z-sources.jar target/tl4j-x.y.z-src.jar
+
+5) Commit:
+
+$ svn commit -m "release x.y.z"
+
+6) Create a tar of the release itself
+
+$ svn export . target/tl4j-release-x.y.z; cd target; zip -r tl4j-release-x.y.z.zip tl4j-release-x.y.z
+
+7) Upload to mvn repository
+
+???? 
+
+8) Upload jars to GoogleCode
+
+The URL is http://code.google.com/p/test-libraries-for-java/downloads/list > New Download. Upload these files, in this order:
+
+target/tl4j-release-x.y.z.zip
+Summary: Full project tree zip
+Labels: Type-Source, OpSys-All
+
+target/tl4j-junit3-only-x.y.z.jar
+Summary: jar with only the JUnit 3-specific classes
+Labels: Type-Package, OpSys-All
+
+target/tl4j-junit4-only-x.y.z.jar
+Summary: jar with only the JUnit 4-specific classes
+Labels: Type-Package, OpSys-All
+
+target/tl4j-agnostic-x.y.z.jar
+Summary: jar with the non-junit (agnostic) classes
+Labels: Type-Package, OpSys-All
+
+target/tl4j-junit3-x.y.z.jar
+Summary: JUnit 3 self-contained jar (this is tl4j-junit3-only + agnostic)
+Labels: Type-Package, OpSys-All
+
+target/tl4j-x.y.z-src.jar
+Summary: source jars (has all the sources)
+Labels: Type-Source, OpSys-All
+
+target/tl4j-junit4-x.y.z.jar
+Summary: JUnit 4 self-contained jar (this is tl4j-junit4-only + agnostic)
+Labels: Featured, Type-Package, OpSys-All
+
+Mark the older release as deprecated (which you'll find as an option under "Delete").
+
+9) Go back to trunk
+
+$ cd trunk
+
+10) change the pom.xml's version to the new snapshot to:
+
+<version>x.y.z-SNAPSHOT</version>
+
+11) commit
+
+$ svn commit -m "set current version to x.y.z-SNAPSHOT"
